@@ -12,6 +12,7 @@ bool stopbit;
 bool startbit;
 
 bool flag;
+bool release_flag;
 /*End of setup*/
 
 CircularBuffer key_buffer = CircularBuffer();
@@ -23,7 +24,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(CLOCKPIN), readPs2, FALLING);
   
   flag = false;
-  Serial.begin(9600);
+  release_flag = false;
+  //Serial.begin(9600);
 }
 
 void loop() {
@@ -32,17 +34,31 @@ void loop() {
   byte key_press;
   char actual_key;
   if (key_buffer.isEmpty() == false) {
-    //Keyboard.begin();
+    Keyboard.begin();
     key_press = key_buffer.removeByte();
 
-    if (key_press != 0xF0){
+    
+    //if this next stroke is supposed to be release
+    if (release_flag) {
       actual_key = key_translate(key_press);
-      Serial.print(actual_key);
-      Serial.print("\n");
-      //Keyboard.print('h');
-      //Keyboard.end();
+      Keyboard.release(actual_key);
+      release_flag = false;
+    } 
+    //this next keystroke is supposed to be pressed
+    else {
+      if (key_press != 0xF0){
+      actual_key = key_translate(key_press);
+      //Serial.print(actual_key);
+      //Serial.print("\n");
+      Keyboard.press(actual_key);
+      }
+      else {
+        release_flag = true;
+      }
+
     }
-      
+    
+    Keyboard.end();
     flag = false;
   }
 }
